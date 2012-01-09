@@ -1,0 +1,157 @@
+/***************************************************************************
+ *             __________               __   ___.
+ *   Open      \______   \ ____   ____ |  | _\_ |__   _______  ___
+ *   Source     |       _//  _ \_/ ___\|  |/ /| __ \ /  _ \  \/  /
+ *   Jukebox    |    |   (  <_> )  \___|    < | \_\ (  <_> > <  <
+ *   Firmware   |____|_  /\____/ \___  >__|_ \|___  /\____/__/\_ \
+ *                     \/            \/     \/    \/            \/
+ * $Id: ascodec-target.h 26116 2010-05-17 20:53:25Z funman $
+ *
+ * Module wrapper for AS3543 audio codec, using /dev/afe (afe.ko) of Samsung YP-R0
+ *
+ * Copyright (c) 2011 Lorenzo Miori
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ****************************************************************************/
+
+#include "fcntl.h"
+#include "unistd.h"
+#include "stdio.h"
+#include "string.h"
+#include "sys/ioctl.h"
+#include "stdlib.h"
+
+#include "ascodec-target.h"
+
+int afe_dev = -1;
+
+/* ioctl parameter struct */
+struct codec_req_struct {
+/* This works for every kind of afe.ko module requests */
+    unsigned char reg; /* Main register address */
+    unsigned char subreg; /* Set this only if you are reading/writing a PMU register*/
+    unsigned char value; /* To be read if reading a register; to be set if writing to a register */
+} __attribute__((packed));
+
+
+/* Write to a normal register */
+#define IOCTL_REG_WRITE         0x40034101
+/* Write to a PMU register */
+#define IOCTL_SUBREG_WRITE      0x40034103
+/* Read from a normal register */
+#define IOCTL_REG_READ          0x80034102
+/* Read from a PMU register */
+#define IOCTL_SUBREG_READ       0x80034103
+
+
+int ascodec_init(void)
+{
+    afe_dev = open("/dev/afe", O_RDWR);
+    return afe_dev;
+}
+
+void ascodec_close(void)
+{
+    if (afe_dev >= 0) {
+        close(afe_dev);
+    }
+}
+
+/* Read functions returns -1 if fail, otherwise the register's value if success */
+/* Write functions return >= 0 if success, otherwise -1 if fail */
+
+int ascodec_write(unsigned int reg, unsigned int value)
+{
+    struct codec_req_struct r = { .reg = reg, .value = value };
+    return ioctl(afe_dev, IOCTL_REG_WRITE, &r);
+}
+
+int ascodec_read(unsigned int reg)
+{
+    struct codec_req_struct r = { .reg = reg };
+    int retval = ioctl(afe_dev, IOCTL_REG_READ, &r);
+    if (retval >= 0)
+        return r.value;
+    else
+        return retval;
+}
+
+void ascodec_write_pmu(unsigned int index, unsigned int subreg,
+                                     unsigned int value)
+{
+    struct codec_req_struct r = {.reg = index, .subreg = subreg, .value = value};
+    ioctl(afe_dev, IOCTL_SUBREG_WRITE, &r);
+}
+
+int ascodec_read_pmu(unsigned int index, unsigned int subreg)
+{
+    struct codec_req_struct r = { .reg = index, .subreg = subreg, };
+    int retval = ioctl(afe_dev, IOCTL_SUBREG_READ, &r);
+    if (retval >= 0)
+        return r.value;
+    else
+        return retval;
+}
+
+int ascodec_readbytes(unsigned int index, unsigned int len, unsigned char *data)
+{
+    int i, val, ret = 0;
+
+    for (i = 0; i < (int)len; i++)
+    {
+        val = ascodec_read(i + index);
+        if (val >= 0) data[i] = val;
+        else ret = -1;
+    }
+
+    return (ret ?: (int)len);
+}
+
+/*
+ * NOTE:
+ * After the conversion to interrupts, ascodec_(lock|unlock) are only used by
+ * adc-as3514.c to protect against other threads corrupting the result by using
+ * the ADC at the same time. this adc_read() doesn't yield but blocks, so
+ * lock/unlock is not needed
+ * 
+ * Additionally, concurrent ascodec_?(read|write) calls are instead protected
+ * by the R0's Kernel I2C driver for ascodec (mutexed), so it's automatically
+ * safe
+ */
+
+void ascodec_lock(void)
+{
+}
+
+void ascodec_unlock(void)
+{
+}
+
+/* Read 10-bit channel data */
+unsigned short adc_read(int channel)
+{
+    if ((unsigned)channel >= NUM_ADC_CHANNELS)
+        return 0;
+
+    /* Select channel */
+    ascodec_write(AS3514_ADC_0, (channel << 4));
+    unsigned char buf[2];
+
+    /* Read data */
+    if (ascodec_readbytes(AS3514_ADC_0, 2, buf) < 0)
+        return 0;
+
+    /* decode to 10-bit and return */
+    return (((buf[0] & 0x3) << 8) | buf[1]);
+}
+
+void adc_init(void)
+{
+}

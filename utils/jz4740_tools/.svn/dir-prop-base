@@ -1,0 +1,21 @@
+K 10
+svn:ignore
+V 181
+HXFreplace
+HXF2IHFS
+usbtool
+DLanalyser
+HXFsplit
+HXFmerge
+IHFSsplit
+HXFreplace.exe
+HXF2IHFS.exe
+usbtool.exe
+DLanalyser.exe
+HXFsplit.exe
+HXFmerge.exe
+IHFSsplit.exe
+jz_xloader.*
+bin2c
+
+END

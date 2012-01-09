@@ -1,0 +1,15 @@
+K 10
+svn:ignore
+V 89
+build
+RockboxUtility
+RockboxUtility.*
+Makefile
+*.qm
+release
+debug
+*.Debug
+*.Release
+tags
+
+END

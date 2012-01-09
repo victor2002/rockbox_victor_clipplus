@@ -1,0 +1,43 @@
+10
+
+dir
+31516
+svn://svn.rockbox.org/rockbox/trunk/firmware/test
+svn://svn.rockbox.org/rockbox
+
+
+
+2011-12-18T06:43:08.627400Z
+31351
+dreamlayers
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+a1c6a512-1295-4272-9138-f99709370657
+
+id3
+dir
+
+kernel
+dir
+
+snprintf
+dir
+
+fat
+dir
+
+i2c
+dir
+

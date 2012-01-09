@@ -1,0 +1,9 @@
+K 10
+svn:ignore
+V 47
+bootimg.*
+beastpatcher
+beastpatcher.exe
+bin2c*
+
+END

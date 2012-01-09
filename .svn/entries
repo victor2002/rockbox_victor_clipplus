@@ -1,0 +1,119 @@
+10
+
+dir
+31516
+svn://svn.rockbox.org/rockbox/trunk
+svn://svn.rockbox.org/rockbox
+
+
+
+2012-01-01T21:28:03.784576Z
+31516
+theseven
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+a1c6a512-1295-4272-9138-f99709370657
+
+android
+dir
+
+debian
+dir
+
+packaging
+dir
+
+docs
+dir
+
+fonts
+dir
+
+bootloader
+dir
+
+gdb
+dir
+
+flash
+dir
+
+tools
+dir
+
+utils
+dir
+
+rbutil
+dir
+
+apps
+dir
+
+lib
+dir
+
+backdrops
+dir
+
+.gitattributes
+file
+
+
+
+
+2011-12-05T11:56:34.877026Z
+e1ea1e908dc3f78728bb25bf8151e71f
+2011-12-01T14:14:59.074078Z
+31104
+torne
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+368
+
+wps
+dir
+
+icons
+dir
+
+firmware
+dir
+
+manual
+dir
+
+uisimulator
+dir
+

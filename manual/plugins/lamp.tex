@@ -1,0 +1,45 @@
+% $Id: lamp.tex 28544 2010-11-09 22:10:38Z wodz $ %
+\subsection{Lamp}
+Lamp is a simple plugin to use your player as a lamp (flashlight, torch).
+You get an empty screen with maximum brightness.
+\begin{btnmap}
+  \opt{lcd_color}{
+    \nopt{touchscreen}{\ButtonLeft{} / \ButtonRight}%
+    \opt{touchscreen}{\TouchMidLeft{} / \TouchMidRight}
+        &
+    \opt{HAVEREMOTEKEYMAP}{
+        & }
+    Toggle between colours
+        \\
+  }
+
+  \opt{backlight_brightness}{
+    \nopt{IPOD_4G_PAD,SANSA_E200_PAD,SANSA_FUZE_PAD,MPIO_HD200_PAD,touchscreen}
+        {\ButtonDown{} / \ButtonUp}%
+    \opt{IPOD_4G_PAD,SANSA_E200_PAD,SANSA_FUZE_PAD}{\ButtonScrollBack{} / \ButtonScrollFwd}
+    \opt{MPIO_HD200_PAD}{FIXME}
+    \opt{touchscreen}{\TouchBottomMiddle{} / \TouchTopMiddle}
+        &
+    \opt{HAVEREMOTEKEYMAP}{
+        & }
+    Change the brightness
+        \\
+  }
+
+  \opt{lcd_color,backlight_brightness}{
+    Any other key
+        &
+    \opt{HAVEREMOTEKEYMAP}{
+        & }
+    Quit
+        \\
+  }
+  \nopt{lcd_color,backlight_brightness}{
+    Any key
+        &
+    \opt{HAVEREMOTEKEYMAP}{
+        & }
+    Quit
+        \\
+  }
+\end{btnmap}

@@ -1,0 +1,80 @@
+10
+
+dir
+31516
+svn://svn.rockbox.org/rockbox/trunk/flash
+svn://svn.rockbox.org/rockbox
+
+
+
+2011-12-18T06:43:08.627400Z
+31351
+dreamlayers
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+a1c6a512-1295-4272-9138-f99709370657
+
+minimon
+dir
+
+make_firmware
+dir
+
+bootloader
+dir
+
+extract
+dir
+
+bootbox
+dir
+
+README
+file
+
+
+
+
+2011-12-05T11:50:23.488594Z
+f40d1172d498b272257e181795fa5a28
+2008-05-05T10:32:46.642870Z
+17369
+nicolasp
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+229
+
+uart_boot
+dir
+

@@ -1,0 +1,28 @@
+K 10
+svn:ignore
+V 240
+bdf2bmp
+sh2d
+scramble
+generate_rocklatin
+descramble
+convbdf
+bmp2rb
+codepages
+rdf2binary
+mkboot
+player_unifont
+uclpack
+ipod_fw
+checkwps
+wavtrim
+voicefont
+rbspeexenc
+rbspeexdec
+mknkboot
+mktccboot
+mkzenboot
+iaudio_bl_flash.c
+iaudio_bl_flash.h
+
+END

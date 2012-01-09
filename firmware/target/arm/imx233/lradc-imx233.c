@@ -1,0 +1,210 @@
+/***************************************************************************
+ *             __________               __   ___.
+ *   Open      \______   \ ____   ____ |  | _\_ |__   _______  ___
+ *   Source     |       _//  _ \_/ ___\|  |/ /| __ \ /  _ \  \/  /
+ *   Jukebox    |    |   (  <_> )  \___|    < | \_\ (  <_> > <  <
+ *   Firmware   |____|_  /\____/ \___  >__|_ \|___  /\____/__/\_ \
+ *                     \/            \/     \/    \/            \/
+ * $Id$
+ *
+ * Copyright (C) 2011 by Amaury Pouly
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
+ * KIND, either express or implied.
+ *
+ ****************************************************************************/
+#include "system.h"
+#include "system-target.h"
+#include "lradc-imx233.h"
+
+struct channel_arbiter_t
+{
+    struct semaphore sema;
+    struct mutex mutex;
+    unsigned free_bm;
+    int count;
+};
+
+static void arbiter_init(struct channel_arbiter_t *a, unsigned count)
+{
+    mutex_init(&a->mutex);
+    semaphore_init(&a->sema, count, count);
+    a->free_bm = (1 << count) - 1;
+    a->count = count;
+}
+
+// doesn't check in use !
+static void arbiter_reserve(struct channel_arbiter_t *a, unsigned channel)
+{
+    // assume semaphore has a free slot immediately
+    if(semaphore_wait(&a->sema, TIMEOUT_NOBLOCK) != OBJ_WAIT_SUCCEEDED)
+        panicf("arbiter_reserve failed on semaphore_wait !");
+    mutex_lock(&a->mutex);
+    a->free_bm &= ~(1 << channel);
+    mutex_unlock(&a->mutex);
+}
+
+static int arbiter_acquire(struct channel_arbiter_t *a, int timeout)
+{
+    int w = semaphore_wait(&a->sema, timeout);
+    if(w == OBJ_WAIT_TIMEDOUT)
+        return w;
+    mutex_lock(&a->mutex);
+    int chan = find_first_set_bit(a->free_bm);
+    if(chan >= a->count)
+        panicf("arbiter_acquire cannot find a free channel !");
+    a->free_bm &= ~(1 << chan);
+    mutex_unlock(&a->mutex);
+    return chan;
+}
+
+static void arbiter_release(struct channel_arbiter_t *a, int channel)
+{
+    mutex_lock(&a->mutex);
+    a->free_bm |= 1 << channel;
+    mutex_unlock(&a->mutex);
+    semaphore_release(&a->sema);
+}
+
+/* channels */
+struct channel_arbiter_t channel_arbiter;
+/* delay channels */
+struct channel_arbiter_t delay_arbiter;
+
+void imx233_lradc_setup_channel(int channel, bool div2, bool acc, int nr_samples, int src)
+{
+    __REG_CLR(HW_LRADC_CHx(channel)) = HW_LRADC_CHx__NUM_SAMPLES_BM | HW_LRADC_CHx__ACCUMULATE;
+    __REG_SET(HW_LRADC_CHx(channel)) = nr_samples << HW_LRADC_CHx__NUM_SAMPLES_BP |
+        acc << HW_LRADC_CHx__ACCUMULATE;
+    if(div2)
+        __REG_SET(HW_LRADC_CTRL2) = HW_LRADC_CTRL2__DIVIDE_BY_TWO(channel);
+    else
+        __REG_CLR(HW_LRADC_CTRL2) = HW_LRADC_CTRL2__DIVIDE_BY_TWO(channel);
+    __REG_CLR(HW_LRADC_CTRL4) = HW_LRADC_CTRL4__LRADCxSELECT_BM(channel);
+    __REG_SET(HW_LRADC_CTRL4) = src << HW_LRADC_CTRL4__LRADCxSELECT_BP(channel);
+}
+
+void imx233_lradc_setup_delay(int dchan, int trigger_lradc, int trigger_delays,
+    int loop_count, int delay)
+{
+    HW_LRADC_DELAYx(dchan) =
+        trigger_lradc << HW_LRADC_DELAYx__TRIGGER_LRADCS_BP |
+        trigger_delays << HW_LRADC_DELAYx__TRIGGER_DELAYS_BP |
+        loop_count << HW_LRADC_DELAYx__LOOP_COUNT_BP |
+        delay << HW_LRADC_DELAYx__DELAY_BP;
+}
+
+void imx233_lradc_kick_channel(int channel)
+{
+    __REG_CLR(HW_LRADC_CTRL1) = HW_LRADC_CTRL1__LRADCx_IRQ(channel);
+    __REG_SET(HW_LRADC_CTRL0) = HW_LRADC_CTRL0__SCHEDULE(channel);
+}
+
+void imx233_lradc_kick_delay(int dchan)
+{
+    __REG_SET(HW_LRADC_DELAYx(dchan)) = HW_LRADC_DELAYx__KICK;
+}
+
+void imx233_lradc_wait_channel(int channel)
+{
+    /* wait for completion */
+    while(!(HW_LRADC_CTRL1 & HW_LRADC_CTRL1__LRADCx_IRQ(channel)))
+        yield();
+}
+
+int imx233_lradc_read_channel(int channel)
+{
+    return __XTRACT_EX(HW_LRADC_CHx(channel), HW_LRADC_CHx__VALUE);
+}
+
+void imx233_lradc_clear_channel(int channel)
+{
+    __REG_CLR(HW_LRADC_CHx(channel)) = HW_LRADC_CHx__VALUE_BM;
+}
+
+int imx233_lradc_acquire_channel(int timeout)
+{
+    return arbiter_acquire(&channel_arbiter, timeout);
+}
+
+void imx233_lradc_release_channel(int chan)
+{
+    return arbiter_release(&channel_arbiter, chan);
+}
+
+void imx233_lradc_reserve_channel(int channel)
+{
+    return arbiter_reserve(&channel_arbiter, channel);
+}
+
+int imx233_lradc_acquire_delay(int timeout)
+{
+    return arbiter_acquire(&delay_arbiter, timeout);
+}
+
+void imx233_lradc_release_delay(int chan)
+{
+    return arbiter_release(&delay_arbiter, chan);
+}
+
+void imx233_lradc_reserve_delay(int channel)
+{
+    return arbiter_reserve(&delay_arbiter, channel);
+}
+
+int imx233_lradc_sense_die_temperature(int nmos_chan, int pmos_chan)
+{
+    // mux sensors
+    __REG_CLR(HW_LRADC_CTRL2) = HW_LRADC_CTRL2__TEMPSENSE_PWD;
+    imx233_lradc_clear_channel(nmos_chan);
+    imx233_lradc_clear_channel(pmos_chan);
+    // schedule both channels
+    imx233_lradc_kick_channel(nmos_chan);
+    imx233_lradc_kick_channel(pmos_chan);
+    // wait completion
+    imx233_lradc_wait_channel(nmos_chan);
+    imx233_lradc_wait_channel(pmos_chan);
+    // mux sensors
+    __REG_SET(HW_LRADC_CTRL2) = HW_LRADC_CTRL2__TEMPSENSE_PWD;
+    // do the computation
+    int diff = imx233_lradc_read_channel(nmos_chan) - imx233_lradc_read_channel(pmos_chan);
+    // return diff * 1.012 / 4
+    return (diff * 1012) / 4000;
+}
+
+void imx233_lradc_setup_battery_conversion(bool automatic, unsigned long scale_factor)
+{
+    __REG_CLR(HW_LRADC_CONVERSION) = HW_LRADC_CONVERSION__SCALE_FACTOR_BM;
+    __REG_SET(HW_LRADC_CONVERSION) = scale_factor;
+    if(automatic)
+        __REG_SET(HW_LRADC_CONVERSION) = HW_LRADC_CONVERSION__AUTOMATIC;
+    else
+        __REG_CLR(HW_LRADC_CONVERSION) = HW_LRADC_CONVERSION__AUTOMATIC;
+}
+
+int imx233_lradc_read_battery_voltage(void)
+{
+    return __XTRACT(HW_LRADC_CONVERSION, SCALED_BATT_VOLTAGE);
+}
+
+void imx233_lradc_init(void)
+{
+    arbiter_init(&channel_arbiter, HW_LRADC_NUM_CHANNELS);
+    arbiter_init(&delay_arbiter, HW_LRADC_NUM_DELAYS);
+    // enable block
+    imx233_reset_block(&HW_LRADC_CTRL0);
+    // disable ground ref
+    __REG_CLR(HW_LRADC_CTRL0) = HW_LRADC_CTRL0__ONCHIP_GROUNDREF;
+    // disable temperature sensors
+    __REG_CLR(HW_LRADC_CTRL2) = HW_LRADC_CTRL2__TEMP_SENSOR_IENABLE0 |
+        HW_LRADC_CTRL2__TEMP_SENSOR_IENABLE1;
+    __REG_SET(HW_LRADC_CTRL2) = HW_LRADC_CTRL2__TEMPSENSE_PWD;
+    // set frequency
+    __REG_CLR(HW_LRADC_CTRL3) = HW_LRADC_CTRL3__CYCLE_TIME_BM;
+    __REG_SET(HW_LRADC_CTRL3) = HW_LRADC_CTRL3__CYCLE_TIME__6MHz;
+}

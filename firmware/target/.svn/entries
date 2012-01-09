@@ -1,0 +1,43 @@
+10
+
+dir
+31516
+svn://svn.rockbox.org/rockbox/trunk/firmware/target
+svn://svn.rockbox.org/rockbox
+
+
+
+2012-01-01T21:28:03.784576Z
+31516
+theseven
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+a1c6a512-1295-4272-9138-f99709370657
+
+arm
+dir
+
+hosted
+dir
+
+coldfire
+dir
+
+mips
+dir
+
+sh
+dir
+

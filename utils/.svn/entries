@@ -1,0 +1,128 @@
+10
+
+dir
+31516
+svn://svn.rockbox.org/rockbox/trunk/utils
+svn://svn.rockbox.org/rockbox
+
+
+
+2011-12-24T23:13:27.483240Z
+31426
+kugel
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+a1c6a512-1295-4272-9138-f99709370657
+
+AMS
+dir
+
+sbinfo
+dir
+
+jz4740_tools
+dir
+
+analysis
+dir
+
+sbtools
+dir
+
+bootchart
+dir
+
+meizu_dfu
+dir
+
+common
+dir
+
+skinupdater
+dir
+
+ipod
+dir
+
+imx_hid_recovery
+dir
+
+MTP
+dir
+
+rockbox_api
+dir
+
+rk27utils
+dir
+
+tcctool
+dir
+
+time-sync
+dir
+
+editors
+dir
+
+themeeditor
+dir
+
+parse_testcodec.rb
+file
+
+
+
+
+2011-12-05T11:50:34.214986Z
+556af646a32425ee37909f0377642dac
+2011-04-12T20:24:43.304828Z
+29707
+saratoga
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+8692
+
+ypr0tools
+dir
+
+disassembler
+dir
+
+zenutils
+dir
+
+imxtools
+dir
+

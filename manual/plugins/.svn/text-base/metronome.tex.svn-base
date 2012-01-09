@@ -1,0 +1,36 @@
+\subsection{Metronome}
+This plugin can be used as a metronome to keep time during music
+practice. Adjust the tempo through the interface or by tapping it out
+on the appropriate button.
+
+\begin{btnmap}
+    \PluginExit
+       \opt{HAVEREMOTEKEYMAP}{& }
+        & Exit plugin \\
+
+    \PluginCancel
+       \opt{HAVEREMOTEKEYMAP}{& \PluginRCCancel}
+        & Stop \\
+        
+    \PluginSelectRepeat
+       \opt{HAVEREMOTEKEYMAP}{& \PluginRCCancel}
+       & Start \\
+
+    \PluginSelect
+       \opt{HAVEREMOTEKEYMAP}{& \PluginRCSelect}
+        & Tap tempo \\
+
+    \PluginLeft{} / \PluginRight
+       \opt{HAVEREMOTEKEYMAP}{& \PluginRCLeft{} / \PluginRCRight}
+        & Adjust tempo \\
+
+    \opt{scrollwheel}{\PluginScrollFwd{} / \PluginScrollBack}
+    \nopt{scrollwheel}{\PluginUp{} / \PluginDown}
+        \opt{HAVEREMOTEKEYMAP}{& \PluginRCUp{} / \PluginRCDown}
+        & Adjust volume \\
+
+    \opt{IRIVER_H100_PAD,IRIVER_H300_PAD,SANSA_E200_PAD}{
+      \ButtonRec
+        \opt{HAVEREMOTEKEYMAP}{& }
+        & Sync tap \\}
+\end{btnmap}
